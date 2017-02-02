@@ -5,6 +5,27 @@
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include<unistd.h>
+#include<pthread.h>
+
+
+void* connectToServer()
+{
+	printf("Connecting... not really.");
+		// if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)
+		// {
+		// 	printf("Connected to server %dn",clientFileDescriptor);
+		// 	printf("nEnter Srting to send");
+		// 	sprintf(str_clnt,)
+		// 	write(clientFileDescriptor,str_clnt,20);
+		// 	read(clientFileDescriptor,str_ser,20);
+		// 	printf("String from Server: %s",str_ser);
+		// 	close(clientFileDescriptor);
+		// }
+		// else{
+		// 	printf("socket creation failed");
+		// }
+		
+}
 
 int main()
 {
@@ -16,18 +37,9 @@ int main()
 	sock_var.sin_port=3000;
 	sock_var.sin_family=AF_INET;
 
-	if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)
-	{
-		printf("Connected to server %dn",clientFileDescriptor);
-		printf("nEnter Srting to send");
-		scanf("%s",str_clnt);
-		write(clientFileDescriptor,str_clnt,20);
-		read(clientFileDescriptor,str_ser,20);
-		printf("String from Server: %s",str_ser);
-		close(clientFileDescriptor);
+	pthread_t threads[1000];
+
+	for(int i=0;i<1000;i++){
+		pthread_create(&threads[i],NULL,connectToServer,NULL);
 	}
-	else{
-		printf("socket creation failed");
-	}
-	return 0;
 }
