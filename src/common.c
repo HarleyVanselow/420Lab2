@@ -18,8 +18,13 @@ void snd_request(int socket, struct request* req){
 void rcv_request(int socket, struct request* req){
     uint32_t nindex, ntype;
 
-    read(socket, &nindex, sizeof(uint32_t));
-    read(socket, &ntype, sizeof(uint32_t));
+    if (read(socket, &nindex, sizeof(uint32_t)) == -1){
+            return -1;
+    }
+
+    if(read(socket, &ntype, sizeof(uint32_t)) == -1){
+        return -1;
+    }
 
     req->index = ntohl(nindex);
     req->type = ntohl(ntype);
