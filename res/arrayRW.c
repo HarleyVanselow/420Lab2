@@ -78,6 +78,7 @@ void *Operate(void* rank) {
 	int pos = rand_r(&seed[my_rank]) % NUM_STR;
 	int randNum = rand_r(&seed[my_rank]) % 100;	// write with 10% probability
 	
+	
 	str_clnt = "String %d has been modied by a write request";
 	if (randNum >= 95) // 10% are write operations, others are reads
 		sprintf(theArray[pos], "theArray[%d] modified by thread %d", pos, my_rank);

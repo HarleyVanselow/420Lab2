@@ -34,3 +34,5 @@
 
 # Vim
 *.swp
+
+*.client
