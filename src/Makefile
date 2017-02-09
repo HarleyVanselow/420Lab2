@@ -1,4 +1,4 @@
 client:
-    gcc -std=gnu99 -pthread common.c client.c -o client
+    gcc -std=gnu99 -pthread -o client common.c client.c
 
 

@@ -6,9 +6,11 @@
 #include<arpa/inet.h>
 #include<unistd.h>
 #include<pthread.h>
+#include<string.h>
 
 #include<stdint.h>
-
+#include"common.h"
+#include"server.h"
 
 
 int main(int argc, char** argv){
@@ -20,47 +22,47 @@ int main(int argc, char** argv){
     init_array(n);
 
     while(1){
-        for(i=0;i<THREAD_COUNT;i++){
+        for(int i=0;i<THREAD_COUNT;i++){
             csock=accept(ssock,NULL,NULL);
             pthread_create(
-                    &t,
+                    &t[i],
                     NULL,
                     handle_request,
                     (void *) csock
             );
         }
-        for(i=0;i<THREAD_COUT; i++){
-            pthread_join(&t, (void *) &result);
+        for(int i=0;i<THREAD_COUNT; i++){
+            pthread_join(&t[i], (void *) &result);
         }
     }
     close(ssock);
-}
+
 return 0;
 }
 
 void *handle_request(void *args){
-    request req;
-    response res;
+    struct request req;
+    struct response res;
 
-    int csock = (int) args;
+    int sock = (int) args;
 
-    if(rcv_request(sock, req) == - 1){
-        res.msg = "Unable to receive request";
-
-    if (req->type == REQ_RD){
-        if(read_index(req.index, res.msg) == -1){
-            sprintf(res.msg, "Unable to read index %lu", req.index);
+    if(rcv_request(sock, &req) == - 1){
+            strncpy(res.msg,"Unable to receive request",MSG_SIZE);
+        if (req.type == REQ_RD){
+            if(read_index(req.index, res.msg) == -1){
+                sprintf(res.msg, "Unable to read index %lu", req.index);
+            }
+        } else if(req.type == REQ_WR) {
+            if(write_index(req.index, res.msg) == -1){
+                sprintf(res.msg, "Unable to write index %lu", req.index);
+            }
+        } else {
+            strncpy(res.msg,"Invalid type",MSG_SIZE);
         }
-    } else if(req->type == REQ_WR) {
-        if(write_index(req.index, res.msg) == -1){
-            sprintf(res.msg, "Unable to write index %lu", req.index);
-        }
-    } else {
-        res.msg = "Invalid type";
+
+        snd_response(sock, &res);
+        close(sock);
     }
-
-    snd_response(sock, res);
-	close(sock);
 }
 
 int init_socket(int port){
@@ -78,7 +80,7 @@ int init_socket(int port){
 		listen(ssock,2000); 
     } else {
         printf("Unable to bind to socket\n");
-        exit();
+        exit(EXIT_FAILURE);
         
     }
 }
@@ -89,14 +91,14 @@ void init_array(uint32_t n){
     array = malloc(sizeof(char*) * n);
     if (array == NULL){
         printf("Unable to allocate array");
-        exit();
+        exit(EXIT_FAILURE);
     }
 
     for(uint32_t i=0; i < n; i++){
         tmp = malloc(sizeof(char) * MSG_SIZE);
         if (tmp == NULL){
             printf("Unable to allocate string %lu\n", i);
-            exit();
+            exit(EXIT_FAILURE);
         }    
 
         sscanf(tmp, "String %lu: the initial value.", i);
@@ -116,6 +118,6 @@ int write_index(uint32_t index, char* buff){
 int read_index(uint32_t index, char* buff){
     int s;
     read_lock(index);
-    strncpy(buff, arra[index], MSG_SIZE);
+    strncpy(buff, array[index], MSG_SIZE);
     read_unlock(index);
 }

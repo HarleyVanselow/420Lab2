@@ -2,7 +2,7 @@
 #define __SERVER_H__
 
 // Server Tunables
-#define THREAD_COUT 20
+#define THREAD_COUNT 20
 #define ARRAY_PARTITIONS 1
 
 

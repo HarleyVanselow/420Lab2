@@ -15,7 +15,7 @@ struct response{
 };
 
 void snd_request(int socket, struct request* req);
-void rcv_request(int socket, struct request* req);
+int rcv_request(int socket, struct request* req);
 void snd_response(int socket, struct response* res);
 void rcv_response(int socket, struct response* res);
 

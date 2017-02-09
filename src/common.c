@@ -15,7 +15,7 @@ void snd_request(int socket, struct request* req){
 
 }
 
-void rcv_request(int socket, struct request* req){
+int rcv_request(int socket, struct request* req){
     uint32_t nindex, ntype;
 
     if (read(socket, &nindex, sizeof(uint32_t)) == -1){
