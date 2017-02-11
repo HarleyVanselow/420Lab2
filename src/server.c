@@ -12,10 +12,13 @@
 #include"common.h"
 #include"server.h"
 
+pthread_rwlock_t* lock_array;
+int array_divisions;
+
 
 int main(int argc, char** argv){
     pthread_t* t;
-    int ssock, port, n, thread_count, array_divisions, result;
+    int ssock, port, n, thread_count, result;
     intptr_t csock;
 
     parse_args(argc, argv, &port, &n, &thread_count, &array_divisions);
@@ -89,13 +92,13 @@ int init_socket(int port){
 
 pthread_t*  allocate_threads(int thread_count){
    pthread_t* t = (pthread_t*) malloc(thread_count * sizeof(pthread_t));
-   if(t == null){
+   if(t == NULL){
         printf("Unable to allocate threads\n");
         exit(EXIT_FAILURE);
    }
 }
 
-void init_array(uint32_t n){
+void init_array(int n){
     char* tmp;
 
     array = malloc(sizeof(char*) * n);
@@ -130,6 +133,65 @@ int read_index(uint32_t index, char* buff){
     read_lock(index);
     strncpy(buff, array[index], MSG_SIZE);
     read_unlock(index);
+}
+
+void read_unlock(uint32_t index){
+    pthread_rwlock_unlock(&lock_array[index%array_divisions]);
+}
+
+void read_lock(uint32_t index){
+    pthread_rwlock_rdlock(&lock_array[index%array_divisions]);
+}
+
+void write_unlock(uint32_t index){
+    pthread_rwlock_unlock(&lock_array[index%array_divisions]);
+}
+
+void write_lock(uint32_t index){
+    pthread_rwlock_wrlock(&lock_array[index%array_divisions]);
+}
+
+void init_protection(int array_divisions){
+    lock_array = malloc(array_divisions * sizeof(pthread_rwlock_t));   
+    if(lock_array == NULL){
+            printf("Unable to allocate lock array\n");
+            exit(EXIT_FAILURE);
+    }
+    for(int i = 0; i < array_divisions; i++){
+        if(pthread_rwlock_init(&lock_array[i], NULL) != 0){
+            printf("Unable to initialize lock %d\n", i);
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+void parse_args(int argc, char** argv, 
+        int* port, int* n,
+        int* thread_count, int* array_divisions){
+
+        if(3 <= argc && argc < 5){
+            printf("Usage: %s <port> <n> [<thread_count> <array_divisions>]\n", argv[0]);
+            exit(EXIT_FAILURE);
+        }
+
+        *port = atoi(argv[1]);
+        if(*port == 0){
+            printf("Please enter a valid port number\n");
+            exit(EXIT_FAILURE);
+        }
+        *n = atoi(argv[1]);
+        if(*n <= 0){
+            printf("Please enter a positive number");
+            exit(EXIT_FAILURE);
+        }
+
+        *thread_count = 1000;
+        *array_division = 1;
+
+        if(argc > 3){
+            *thread_count = atoi(argv[1]);
+            *array_divisions = atoi(argv[1]);
+        }
 }
 
 

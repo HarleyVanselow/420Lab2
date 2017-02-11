@@ -5,11 +5,10 @@
 char** array;
 
 // Functions
-int read_lock(uint32_t index);
-int read_unlock(uint32_t index);
-
-int write_lock(uint32_t index);
-int write_unlock(int index);
+void read_lock(uint32_t index);
+void read_unlock(uint32_t index);
+void write_lock(uint32_t index);
+void write_unlock(uint32_t index);
 
 int read_index(uint32_t index, char* buff);
 int write_index(uint32_t index, char* buff);
