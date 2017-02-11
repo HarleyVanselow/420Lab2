@@ -12,8 +12,8 @@
 #include"common.h"
 #include"server.h"
 
-pthread_rwlock_t* lock_array;
 int array_divisions;
+pthread_rwlock_t* lock_array;
 
 
 int main(int argc, char** argv){
@@ -23,7 +23,7 @@ int main(int argc, char** argv){
 
     parse_args(argc, argv, &port, &n, &thread_count, &array_divisions);
     ssock = init_socket(port);
-    allocate_threads(thread_count);
+    t = allocate_threads(thread_count);
     init_protection(array_divisions);
     init_array(n);
 
@@ -46,7 +46,7 @@ int main(int argc, char** argv){
 return 0;
 }
 
-void *handle_request(void *args){
+void* handle_request(void *args){
     struct request req;
     struct response res;
 
@@ -56,11 +56,11 @@ void *handle_request(void *args){
             strncpy(res.msg,"Unable to receive request",MSG_SIZE);
         if (req.type == REQ_RD){
             if(read_index(req.index, res.msg) == -1){
-                sprintf(res.msg, "Unable to read index %lu", req.index);
+                sprintf(res.msg, "Unable to read index %u", req.index);
             }
         } else if(req.type == REQ_WR) {
             if(write_index(req.index, res.msg) == -1){
-                sprintf(res.msg, "Unable to write index %lu", req.index);
+                sprintf(res.msg, "Unable to write index %u", req.index);
             }
         } else {
             strncpy(res.msg,"Invalid type",MSG_SIZE);
@@ -69,6 +69,8 @@ void *handle_request(void *args){
         snd_response(sock, &res);
         close(sock);
     }
+
+    return NULL;
 }
 
 int init_socket(int port){
@@ -88,6 +90,8 @@ int init_socket(int port){
         printf("Unable to bind to socket\n");
         exit(EXIT_FAILURE);
     }
+
+    return ssock;
 }
 
 pthread_t*  allocate_threads(int thread_count){
@@ -96,6 +100,7 @@ pthread_t*  allocate_threads(int thread_count){
         printf("Unable to allocate threads\n");
         exit(EXIT_FAILURE);
    }
+   return t;
 }
 
 void init_array(int n){
@@ -110,29 +115,29 @@ void init_array(int n){
     for(uint32_t i=0; i < n; i++){
         tmp = malloc(sizeof(char) * MSG_SIZE);
         if (tmp == NULL){
-            printf("Unable to allocate string %lu\n", i);
+            printf("Unable to allocate string %u\n", i);
             exit(EXIT_FAILURE);
         }    
 
-        sscanf(tmp, "String %lu: the initial value.", i);
+        sprintf(tmp, "String %u: the initial value.", i);
     }
 };
 
 int write_index(uint32_t index, char* buff){
-    int s;
     write_lock(index);
-    sscanf(array[index], 
-            "String %d has been modified by a write request",
+    sprintf(array[index], 
+            "String %u has been modified by a write request",
             index);
     strncpy(buff, array[index], MSG_SIZE);
     write_unlock(index);
+    return 0;
 }
 
 int read_index(uint32_t index, char* buff){
-    int s;
     read_lock(index);
     strncpy(buff, array[index], MSG_SIZE);
     read_unlock(index);
+    return 0;
 }
 
 void read_unlock(uint32_t index){
@@ -169,7 +174,7 @@ void parse_args(int argc, char** argv,
         int* port, int* n,
         int* thread_count, int* array_divisions){
 
-        if(3 <= argc && argc < 5){
+        if(argc < 3 || argc > 5){
             printf("Usage: %s <port> <n> [<thread_count> <array_divisions>]\n", argv[0]);
             exit(EXIT_FAILURE);
         }
@@ -179,18 +184,28 @@ void parse_args(int argc, char** argv,
             printf("Please enter a valid port number\n");
             exit(EXIT_FAILURE);
         }
-        *n = atoi(argv[1]);
+        *n = atoi(argv[2]);
         if(*n <= 0){
-            printf("Please enter a positive number");
+            printf("Please enter a positive number for the array size");
             exit(EXIT_FAILURE);
         }
 
         *thread_count = 1000;
-        *array_division = 1;
+        *array_divisions = 1;
 
         if(argc > 3){
-            *thread_count = atoi(argv[1]);
-            *array_divisions = atoi(argv[1]);
+            *thread_count = atoi(argv[3]);
+            if(*n <= 0){
+                printf("Please enter a positive number for the thread count");
+                exit(EXIT_FAILURE);
+            }
+
+            *array_divisions = atoi(argv[4]);
+            if(*n <= 0){
+                printf("Please enter a positive number for the array_divisions");
+                exit(EXIT_FAILURE);
+            }
+
         }
 }
 
