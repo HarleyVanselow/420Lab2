@@ -14,15 +14,18 @@
 
 
 int main(int argc, char** argv){
-    pthread_t t[THREAD_COUNT];
-    int ssock, csock, port, n, result;
+    pthread_t* t;
+    int ssock, port, n, thread_count, array_divisions, result;
+    intptr_t csock;
 
-    parse_args(argc, argv, &port, &n);
+    parse_args(argc, argv, &port, &n, &thread_count, &array_divisions);
     ssock = init_socket(port);
+    allocate_threads(thread_count);
+    init_protection(array_divisions);
     init_array(n);
 
     while(1){
-        for(int i=0;i<THREAD_COUNT;i++){
+        for(int i=0;i<thread_count;i++){
             csock=accept(ssock,NULL,NULL);
             pthread_create(
                     &t[i],
@@ -31,8 +34,8 @@ int main(int argc, char** argv){
                     (void *) csock
             );
         }
-        for(int i=0;i<THREAD_COUNT; i++){
-            pthread_join(&t[i], (void *) &result);
+        for(int i=0;i<thread_count; i++){
+            pthread_join(t[i], (void *) &result);
         }
     }
     close(ssock);
@@ -44,7 +47,7 @@ void *handle_request(void *args){
     struct request req;
     struct response res;
 
-    int sock = (int) args;
+    int sock = (intptr_t) args;
 
     if(rcv_request(sock, &req) == - 1){
             strncpy(res.msg,"Unable to receive request",MSG_SIZE);
@@ -81,8 +84,15 @@ int init_socket(int port){
     } else {
         printf("Unable to bind to socket\n");
         exit(EXIT_FAILURE);
-        
     }
+}
+
+pthread_t*  allocate_threads(int thread_count){
+   pthread_t* t = (pthread_t*) malloc(thread_count * sizeof(pthread_t));
+   if(t == null){
+        printf("Unable to allocate threads\n");
+        exit(EXIT_FAILURE);
+   }
 }
 
 void init_array(uint32_t n){
@@ -121,3 +131,5 @@ int read_index(uint32_t index, char* buff){
     strncpy(buff, array[index], MSG_SIZE);
     read_unlock(index);
 }
+
+
