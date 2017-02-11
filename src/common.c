@@ -28,6 +28,8 @@ int rcv_request(int socket, struct request* req){
 
     req->index = ntohl(nindex);
     req->type = ntohl(ntype);
+
+    return 0;
 }
 
 void snd_response(int socket, struct response* res){

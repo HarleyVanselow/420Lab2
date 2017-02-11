@@ -16,7 +16,7 @@
 #define STR_LEN 1000
 
 int thread_count =1000;  
-int* seed;
+unsigned int* seed;
 pthread_mutex_t mutex;
 
 
@@ -60,7 +60,7 @@ void* connectToServer(void* id)
 	}else{
 		printf("socket creation failed");
 	}
-		
+    return NULL;	
 }
 
 
