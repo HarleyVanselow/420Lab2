@@ -4,12 +4,14 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
+#include<netinet/tcp.h>
 #include<unistd.h>
 #include<pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h> 
 #include <string.h>
+#include<errno.h>
 #include "timer.h"
 #include "common.h"
 #define NUM_STR 1024
@@ -55,7 +57,12 @@ void* connectToServer(void* id)
 	printf("Trying to connect to server...\n");
 	int socket =connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var)); 
 	if(socket>=0)
-	{
+	{	
+		//Configure socket with TCP_NODELAY
+		int optval =1;
+		if(setsockopt(clientFileDescriptor,SOL_SOCKET,TCP_NODELAY,&optval,sizeof(optval))>=0){
+			printf("Configured socket\n");
+		}else{printf("Config failed: %s\n",strerror(errno));}
 		printf("Connected to server %d\n",clientFileDescriptor);
 		sendPayload(id,socket);
 		printf("Sent payload\n");

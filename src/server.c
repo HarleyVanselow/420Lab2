@@ -51,24 +51,29 @@ void* handle_request(void *args){
     struct response res;
 
     int sock = (intptr_t) args;
-
+	printf("Starting wait...\n");
     if(rcv_request(sock, &req) == - 1){
             strncpy(res.msg,"Unable to receive request",MSG_SIZE);
-        if (req.type == REQ_RD){
-            if(read_index(req.index, res.msg) == -1){
-                sprintf(res.msg, "Unable to read index %u", req.index);
-            }
-        } else if(req.type == REQ_WR) {
-            if(write_index(req.index, res.msg) == -1){
-                sprintf(res.msg, "Unable to write index %u", req.index);
-            }
-        } else {
-            strncpy(res.msg,"Invalid type",MSG_SIZE);
-        }
+	}else{
+		if (req.type == REQ_RD){
+			if(read_index(req.index, res.msg) == -1){
+				sprintf(res.msg, "Unable to read index %u", req.index);
+			}
+		} else if(req.type == REQ_WR) {
+			if(write_index(req.index, res.msg) == -1){
+				sprintf(res.msg, "Unable to write index %u", req.index);
+			}
+		} else {
+			printf("Recieved invalid type\n");
+			strncpy(res.msg,"Invalid type",MSG_SIZE);
+		}	
+	}
+	
+	
 
-        snd_response(sock, &res);
-        close(sock);
-    }
+	snd_response(sock, &res);
+	close(sock);
+    
 
     return NULL;
 }
@@ -190,7 +195,7 @@ void parse_args(int argc, char** argv,
             exit(EXIT_FAILURE);
         }
 
-        *thread_count = 1000;
+        *thread_count = 1;
         *array_divisions = 1;
 
         if(argc > 3){
