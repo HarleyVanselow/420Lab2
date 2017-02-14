@@ -14,10 +14,10 @@
 #include<errno.h>
 #include "timer.h"
 #include "common.h"
-#define NUM_STR 1024
 #define STR_LEN 1000
 
-int thread_count =1;  
+int NUM_STR;
+int thread_count =100;  
 int port;
 unsigned int* seed;
 pthread_mutex_t mutex;
@@ -30,17 +30,16 @@ void sendPayload(void* rank, int socket) {
 	int pos = rand_r(&seed[my_rank]) % NUM_STR;
 	int randNum = rand_r(&seed[my_rank]) % 100;	// write with 10% probability
 	struct request req;
-	printf("Selected position %d\n",pos);
 	req.index = pos;
 	if (randNum >= 95) // 10% are write operations, others are reads
 	{
 		req.type = REQ_WR;
-		printf("Sending write request...\n");
+		//printf("Sending write request...\n");
 		snd_request(socket,&req);
 	}else{
 //issue read command
 		req.type = REQ_RD;
-		printf("Sending read request....\n");
+		//printf("Sending read request....\n");
 		snd_request(socket,&req);
 	}
 }
@@ -54,20 +53,19 @@ void* connectToServer(void* id)
 	sock_var.sin_port=port;
 	sock_var.sin_family=AF_INET;
 	
-	printf("Trying to connect to server...\n");
+	//printf("Trying to connect to server...\n");
 	int socket =connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var)); 
 	if(socket>=0)
 	{	
 		//Configure socket with TCP_NODELAY
-		int optval =1;
-		if(setsockopt(clientFileDescriptor,SOL_SOCKET,TCP_NODELAY,&optval,sizeof(optval))>=0){
-			printf("Configured socket\n");
-		}else{printf("Config failed: %s\n",strerror(errno));}
-		printf("Connected to server %d\n",clientFileDescriptor);
-		sendPayload(id,socket);
-		printf("Sent payload\n");
-		rcv_response(socket, &res);
-		printf("String from Server:\n");
+		//int optval =1;
+		//if(setsockopt(clientFileDescriptor,SOL_SOCKET,TCP_NODELAY,&optval,sizeof(optval))>=0){
+		//	printf("Configured socket\n");
+		//}else{printf("Config failed: %s\n",strerror(errno));}
+		//printf("Connected to server %d\n",clientFileDescriptor);
+		sendPayload(id,clientFileDescriptor);
+		//printf("Sent payload\n");
+		rcv_response(clientFileDescriptor, &res);
 		printf("%s\n",res.msg);
 		close(clientFileDescriptor);
 	}else{
@@ -80,6 +78,7 @@ void* connectToServer(void* id)
 int main(int argc, char** argv)
 {
 	port = atoi(argv[1]);
+	NUM_STR = atoi(argv[2]);
 	long thread;  /* Use long in case of a 64-bit system */
 	pthread_t* thread_handles; 
 	int i;

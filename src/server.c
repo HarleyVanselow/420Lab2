@@ -51,7 +51,6 @@ void* handle_request(void *args){
     struct response res;
 
     int sock = (intptr_t) args;
-	printf("Starting wait...\n");
     if(rcv_request(sock, &req) == - 1){
             strncpy(res.msg,"Unable to receive request",MSG_SIZE);
 	}else{
@@ -69,7 +68,7 @@ void* handle_request(void *args){
 		}	
 	}
 	
-	
+	printf("Sending %s",res.msg);
 
 	snd_response(sock, &res);
 	close(sock);
@@ -110,7 +109,6 @@ pthread_t*  allocate_threads(int thread_count){
 
 void init_array(int n){
     char* tmp;
-
     array = malloc(sizeof(char*) * n);
     if (array == NULL){
         printf("Unable to allocate array");
@@ -125,6 +123,7 @@ void init_array(int n){
         }    
 
         sprintf(tmp, "String %u: the initial value.", i);
+		array[i] = tmp;
     }
 };
 
