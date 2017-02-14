@@ -9,9 +9,10 @@
 void snd_request(int socket, struct request* req){
     uint32_t nindex = htonl(req->index);
     uint32_t ntype = htonl(req->type);
-
-    write(socket, &nindex, sizeof(uint32_t));
-    write(socket, &ntype, sizeof(uint32_t));
+    printf("Index: %d\n",nindex);
+    printf("Type: %d\n",ntype);
+    printf("Write index: wrote %ld bytes\n",write(socket, &nindex, sizeof(uint32_t)));
+    printf("Write type: wrote %ld bytes\n",write(socket, &ntype, sizeof(uint32_t)));
 
 }
 

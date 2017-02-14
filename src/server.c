@@ -78,7 +78,7 @@ int init_socket(int port){
     int ssock=socket(AF_INET,SOCK_STREAM,0);
 
     sock_var.sin_addr.s_addr=inet_addr("127.0.0.1");
-    sock_var.sin_port=3000;
+    sock_var.sin_port=port;
     sock_var.sin_family=AF_INET;
 
     if(bind(ssock,

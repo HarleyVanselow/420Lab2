@@ -1,6 +1,8 @@
+all: client server
 client:
-	gcc -std=c99 -lpthread -o client common.c client.c
+	gcc -std=gnu99 -pthread -o client common.c client.c
 server:
-	gcc -std=c99 -lpthread -o server common.c server.c
-
+	gcc -std=gnu99 -pthread -o server common.c server.c
+clean:
+	rm client server
 
