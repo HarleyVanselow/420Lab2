@@ -7,10 +7,11 @@
 #include<unistd.h>
 #include<pthread.h>
 #include<string.h>
-
+#include"timer.h"
 #include<stdint.h>
 #include"common.h"
 #include"server.h"
+
 
 int array_divisions;
 pthread_rwlock_t* lock_array;
@@ -18,15 +19,17 @@ pthread_rwlock_t* lock_array;
 
 int main(int argc, char** argv){
     pthread_t* t;
-    int ssock, port, n, thread_count, result;
+    int ssock, port, n, thread_count;
+	unsigned int result,total_duration;
     intptr_t csock;
+	
 
     parse_args(argc, argv, &port, &n, &thread_count, &array_divisions);
     ssock = init_socket(port);
     t = allocate_threads(thread_count);
     init_protection(array_divisions);
     init_array(n);
-
+	int connections_processed_count=0;
     while(1){
         for(int i=0;i<thread_count;i++){
             csock=accept(ssock,NULL,NULL);
@@ -39,11 +42,16 @@ int main(int argc, char** argv){
         }
         for(int i=0;i<thread_count; i++){
             pthread_join(t[i], (void *) &result);
+			total_duration+=result;
+			printf("Total duration after thread %u: %d\n",i,total_duration);
+			connections_processed_count++;
         }
+		if(connections_processed_count >= CLIENT_THREADS){
+			break;
+		}
     }
     close(ssock);
-
-return 0;
+return total_duration;
 }
 
 void* handle_request(void *args){
@@ -51,15 +59,18 @@ void* handle_request(void *args){
     struct response res;
 
     int sock = (intptr_t) args;
+	unsigned int* access_duration = malloc(sizeof(unsigned int));
     if(rcv_request(sock, &req) == - 1){
             strncpy(res.msg,"Unable to receive request",MSG_SIZE);
 	}else{
 		if (req.type == REQ_RD){
-			if(read_index(req.index, res.msg) == -1){
+			*access_duration = read_index(req.index, res.msg);
+			if( *access_duration == -1){
 				sprintf(res.msg, "Unable to read index %u", req.index);
 			}
 		} else if(req.type == REQ_WR) {
-			if(write_index(req.index, res.msg) == -1){
+			*access_duration = write_index(req.index, res.msg) ;
+			if(*access_duration == -1){
 				sprintf(res.msg, "Unable to write index %u", req.index);
 			}
 		} else {
@@ -72,7 +83,7 @@ void* handle_request(void *args){
 	close(sock);
     
 
-    return NULL;
+    return access_duration;
 }
 
 int init_socket(int port){
@@ -126,20 +137,26 @@ void init_array(int n){
 };
 
 int write_index(uint32_t index, char* buff){
+	int start,end;
+	GET_TIME(start);
     write_lock(index);
     sprintf(array[index], 
             "String %u has been modified by a write request",
             index);
     strncpy(buff, array[index], MSG_SIZE);
     write_unlock(index);
-    return 0;
+	GET_TIME(end);
+    return end-start;
 }
 
 int read_index(uint32_t index, char* buff){
+	int start,end;
+	GET_TIME(start); 
     read_lock(index);
     strncpy(buff, array[index], MSG_SIZE);
     read_unlock(index);
-    return 0;
+	GET_TIME(end);
+    return end-start;
 }
 
 void read_unlock(uint32_t index){
@@ -192,7 +209,7 @@ void parse_args(int argc, char** argv,
             exit(EXIT_FAILURE);
         }
 
-        *thread_count = 1;
+        *thread_count = 20;
         *array_divisions = 1;
 
         if(argc > 3){

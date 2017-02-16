@@ -17,7 +17,7 @@
 #define STR_LEN 1000
 
 int NUM_STR;
-int thread_count =20;  
+
 int port;
 unsigned int* seed;
 pthread_mutex_t mutex;
@@ -75,26 +75,26 @@ int main(int argc, char** argv)
 	long thread;  /* Use long in case of a 64-bit system */
 	pthread_t* thread_handles; 
 	int i;
-	double start, finish, elapsed;	
+		
 
 	/* Intializes random number generators */
-	seed = malloc(thread_count*sizeof(int));
-	for (i = 0; i < thread_count; i++)
+	seed = malloc(CLIENT_THREADS*sizeof(int));
+	for (i = 0; i < CLIENT_THREADS; i++)
 		seed[i] = i;
 	   
-	thread_handles = malloc (thread_count*sizeof(pthread_t)); 
+	thread_handles = malloc (CLIENT_THREADS*sizeof(pthread_t)); 
 	pthread_mutex_init(&mutex, NULL);
 	
-	GET_TIME(start); 
-	for (thread = 0; thread < thread_count; thread++)  
+	
+	for (thread = 0; thread < CLIENT_THREADS; thread++)  
 		pthread_create(&thread_handles[thread], NULL, connectToServer, (void*) thread);  
 
-	for (thread = 0; thread < thread_count; thread++) 
+	for (thread = 0; thread < CLIENT_THREADS; thread++) 
 		pthread_join(thread_handles[thread], NULL); 
-	GET_TIME(finish);
-	elapsed = finish - start;	
+	
+	
    
 	pthread_mutex_destroy(&mutex);
 	free(thread_handles);
-	return elapsed;
+	return 0;
 }

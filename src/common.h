@@ -4,6 +4,7 @@
 #define MSG_SIZE 64
 #define REQ_RD 0
 #define REQ_WR 1
+#define CLIENT_THREADS 20
 
 struct request{
     uint32_t index;
