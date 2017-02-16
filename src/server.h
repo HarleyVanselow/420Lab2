@@ -10,8 +10,8 @@ void read_unlock(uint32_t index);
 void write_lock(uint32_t index);
 void write_unlock(uint32_t index);
 
-int read_index(uint32_t index, char* buff);
-int write_index(uint32_t index, char* buff);
+double read_index(uint32_t index, char* buff);
+double write_index(uint32_t index, char* buff);
 
 void* handle_request(void* args);
 

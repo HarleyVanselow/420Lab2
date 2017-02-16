@@ -20,7 +20,7 @@ pthread_rwlock_t* lock_array;
 int main(int argc, char** argv){
     pthread_t* t;
     int ssock, port, n, thread_count;
-	unsigned int result,total_duration;
+	double result,total_duration;
     intptr_t csock;
 	
 
@@ -43,7 +43,7 @@ int main(int argc, char** argv){
         for(int i=0;i<thread_count; i++){
             pthread_join(t[i], (void *) &result);
 			total_duration+=result;
-			printf("Total duration after thread %u: %d\n",i,total_duration);
+			printf("Total duration after thread %d: %lf\n",i,total_duration);
 			connections_processed_count++;
         }
 		if(connections_processed_count >= CLIENT_THREADS){
@@ -59,7 +59,7 @@ void* handle_request(void *args){
     struct response res;
 
     int sock = (intptr_t) args;
-	unsigned int* access_duration = malloc(sizeof(unsigned int));
+	double* access_duration = malloc(sizeof(double));
     if(rcv_request(sock, &req) == - 1){
             strncpy(res.msg,"Unable to receive request",MSG_SIZE);
 	}else{
@@ -136,8 +136,8 @@ void init_array(int n){
     }
 };
 
-int write_index(uint32_t index, char* buff){
-	int start,end;
+double write_index(uint32_t index, char* buff){
+	double start,end;
 	GET_TIME(start);
     write_lock(index);
     sprintf(array[index], 
@@ -149,7 +149,7 @@ int write_index(uint32_t index, char* buff){
     return end-start;
 }
 
-int read_index(uint32_t index, char* buff){
+double read_index(uint32_t index, char* buff){
 	int start,end;
 	GET_TIME(start); 
     read_lock(index);
