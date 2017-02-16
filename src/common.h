@@ -1,7 +1,7 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#define MSG_SIZE 32
+#define MSG_SIZE 64
 #define REQ_RD 0
 #define REQ_WR 1
 

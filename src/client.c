@@ -17,7 +17,7 @@
 #define STR_LEN 1000
 
 int NUM_STR;
-int thread_count =100;  
+int thread_count =1000;  
 int port;
 unsigned int* seed;
 pthread_mutex_t mutex;
@@ -34,17 +34,17 @@ void sendPayload(void* rank, int socket) {
 	if (randNum >= 95) // 10% are write operations, others are reads
 	{
 		req.type = REQ_WR;
-		//printf("Sending write request...\n");
+	
 		snd_request(socket,&req);
 	}else{
 //issue read command
 		req.type = REQ_RD;
-		//printf("Sending read request....\n");
 		snd_request(socket,&req);
 	}
 }
 void* connectToServer(void* id)
 {
+//	printf("Created thread %d",(int)id);
 	struct sockaddr_in sock_var;
 	int clientFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 	struct response res;
@@ -53,20 +53,13 @@ void* connectToServer(void* id)
 	sock_var.sin_port=port;
 	sock_var.sin_family=AF_INET;
 	
-	//printf("Trying to connect to server...\n");
 	int socket =connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var)); 
 	if(socket>=0)
 	{	
-		//Configure socket with TCP_NODELAY
-		//int optval =1;
-		//if(setsockopt(clientFileDescriptor,SOL_SOCKET,TCP_NODELAY,&optval,sizeof(optval))>=0){
-		//	printf("Configured socket\n");
-		//}else{printf("Config failed: %s\n",strerror(errno));}
-		//printf("Connected to server %d\n",clientFileDescriptor);
 		sendPayload(id,clientFileDescriptor);
-		//printf("Sent payload\n");
+		
 		rcv_response(clientFileDescriptor, &res);
-		printf("%s\n",res.msg);
+		printf("Thread %ld: Recieved from server: %s\n",(long)id,res.msg);
 		close(clientFileDescriptor);
 	}else{
 		printf("socket creation failed\n");

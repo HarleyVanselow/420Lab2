@@ -68,8 +68,6 @@ void* handle_request(void *args){
 		}	
 	}
 	
-	printf("Sending %s",res.msg);
-
 	snd_response(sock, &res);
 	close(sock);
     
@@ -194,7 +192,7 @@ void parse_args(int argc, char** argv,
             exit(EXIT_FAILURE);
         }
 
-        *thread_count = 1;
+        *thread_count = 2000;
         *array_divisions = 1;
 
         if(argc > 3){
