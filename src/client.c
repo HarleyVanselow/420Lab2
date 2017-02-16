@@ -17,7 +17,7 @@
 #define STR_LEN 1000
 
 int NUM_STR;
-int thread_count =1000;  
+int thread_count =20;  
 int port;
 unsigned int* seed;
 pthread_mutex_t mutex;
@@ -96,5 +96,5 @@ int main(int argc, char** argv)
    
 	pthread_mutex_destroy(&mutex);
 	free(thread_handles);
-	return 0;
+	return elapsed;
 }

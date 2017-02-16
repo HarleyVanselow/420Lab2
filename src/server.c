@@ -192,7 +192,7 @@ void parse_args(int argc, char** argv,
             exit(EXIT_FAILURE);
         }
 
-        *thread_count = 2000;
+        *thread_count = 1;
         *array_divisions = 1;
 
         if(argc > 3){
