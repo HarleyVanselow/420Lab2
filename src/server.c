@@ -20,7 +20,8 @@ pthread_rwlock_t* lock_array;
 int main(int argc, char** argv){
     pthread_t* t;
     int ssock, port, n, thread_count;
-	double result,total_duration;
+	double total_duration;
+    double* result_ptr = NULL;
     intptr_t csock;
 	
 
@@ -30,28 +31,39 @@ int main(int argc, char** argv){
     init_protection(array_divisions);
     init_array(n);
 	int connections_processed_count=0;
+	int connections_started_count=0;
     while(1){
         for(int i=0;i<thread_count;i++){
             csock=accept(ssock,NULL,NULL);
-            pthread_create(
+            if(csock == -1){
+                printf("Unable to open client socket");
+                return EXIT_FAILURE;
+            }
+            while(pthread_create(
                     &t[i],
                     NULL,
                     handle_request,
                     (void *) csock
-            );
+            ) != 0){
+                printf("Unable to create thread\n");
+            }
+            connections_started_count++;
         }
         for(int i=0;i<thread_count; i++){
-            pthread_join(t[i], (void *) &result);
-			total_duration+=result;
-			printf("Total duration after thread %d: %lf\n",i,total_duration);
+            pthread_join(t[i], (void*) &result_ptr);
 			connections_processed_count++;
+			total_duration+=*result_ptr;
         }
-		if(connections_processed_count >= CLIENT_THREADS){
-			break;
+		if(connections_processed_count%CLIENT_THREADS == 0){
+            printf("%.12f\n",total_duration);
+            total_duration = 0;
 		}
     }
-    close(ssock);
-return total_duration;
+    if(close(ssock) != 0){
+        printf("Unable to close socket???\n");
+        return EXIT_FAILURE;
+    }
+return EXIT_SUCCESS;
 }
 
 void* handle_request(void *args){
@@ -65,12 +77,12 @@ void* handle_request(void *args){
 	}else{
 		if (req.type == REQ_RD){
 			*access_duration = read_index(req.index, res.msg);
-			if( *access_duration == -1){
+			if( *access_duration < 0){
 				sprintf(res.msg, "Unable to read index %u", req.index);
 			}
 		} else if(req.type == REQ_WR) {
 			*access_duration = write_index(req.index, res.msg) ;
-			if(*access_duration == -1){
+			if(*access_duration < 0){
 				sprintf(res.msg, "Unable to write index %u", req.index);
 			}
 		} else {
@@ -82,7 +94,6 @@ void* handle_request(void *args){
 	snd_response(sock, &res);
 	close(sock);
     
-
     return access_duration;
 }
 
@@ -150,7 +161,7 @@ double write_index(uint32_t index, char* buff){
 }
 
 double read_index(uint32_t index, char* buff){
-	int start,end;
+	double start,end;
 	GET_TIME(start); 
     read_lock(index);
     strncpy(buff, array[index], MSG_SIZE);

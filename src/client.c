@@ -56,9 +56,16 @@ void* connectToServer(void* id)
 	int socket =connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var)); 
 	if(socket>=0)
 	{	
-		sendPayload(id,clientFileDescriptor);
-		
-		rcv_response(clientFileDescriptor, &res);
+        strncpy(res.msg, "", MSG_SIZE);
+	    while(1){	
+            sendPayload(id,clientFileDescriptor);
+            rcv_response(clientFileDescriptor, &res);
+            if(strlen(res.msg) != 0){
+                break;
+            }
+            printf("Did not receive anything trying again.\n");
+        }
+        
 		printf("Thread %ld: Recieved from server: %s\n",(long)id,res.msg);
 		close(clientFileDescriptor);
 	}else{
